@@ -1,7 +1,9 @@
 import pandas as pd
-import sklearn as skl
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
+from featclus.model import FeatureSelection
 
 ###############################################################################
 # Part 1: Data Exploration
@@ -51,17 +53,44 @@ dataset.plot(kind='scatter', x='age', y='chol')  # not sure which features shoul
 plt.suptitle('Scatter plots')
 
 # Display plots
-plt.show()
+# plt.show()
 
-# Identify missing values and remove them if found
+# Identify missing values
+missing_vals_cnt = dataset.isnull().sum()
+print(f'Missing values: \n{missing_vals_cnt}')
 
-# Check for duplicated and remove them
+# Drop rows with missing values
+dataset.dropna(inplace=True)
+# Drop rows where all values are missing
+dataset.dropna(inplace=True, how='all')
+
+# Remove irrelevant columns (patient ids)
+# There aren't any irrelevant columns so I'm not sure what I'm supposed to do
+
+# Check for duplicates and remove them
+dataset.drop_duplicates(subset=None, inplace=True)
 
 # Encode categorical variables (One hot encoding)
 
+categorical_cols = ['fbs', 'exang']
+# Pandas method
+dataset = pd.get_dummies(dataset, columns=categorical_cols, dtype=int)
+print(dataset.head())
+
+# Todo: Sklearn method
+
 # Select features to be used for clustering
+# fs = FeatureSelection(dataset, shifts=[25, 50, 75, 100], n_jobs=-1)
+# metrics = fs.get_metrics()
+# print(metrics)
+# fs.plot_results(n_features=10) # I am confused by the number of clusters that I should use
+dt = dataset[['age', 'sex', 'cp', 'chol', 'fbs_0', 'fbs_1', 'restecg', 'oldpeak', 'slope', 'ca']]
 
 # Normalise or standardise numerical features
+scaler = StandardScaler()
+dt_scaled = scaler.fit_transform(dt)
+print(dt_scaled)
+
 
 ###############################################################################
 # Part 2: Model Training
