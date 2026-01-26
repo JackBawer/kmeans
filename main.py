@@ -103,8 +103,8 @@ selected_features = ['age', 'sex', 'cp_0', 'cp_1', 'cp_2', 'cp_3', 'trestbps',
 dt = dt[selected_features]
 
 # Normalise or standardise numerical features
-dt_scaled = dt.copy()
-num_cols = ['age', 'trestbps', 'thalach', 'oldpeak']
+dt_scaled = dataset.copy()
+num_cols = ['age', 'trestbps', 'thalach', 'oldpeak', 'target']
 scaler = StandardScaler()
 dt_scaled[num_cols] = scaler.fit_transform(dt_scaled[num_cols])
 print(dt_scaled.head())
@@ -116,7 +116,12 @@ print(dt_scaled.head())
 
 # Split dataset into training set (80%) and a test set (20%)
 x = dt_scaled
-y = dataset
+y = dt_scaled['target']
+# For debugging
+print(x.shape)
+print(y.shape)
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 # Apply Elbow method and choose an appropriate number of clusters k
 
