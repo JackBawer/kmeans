@@ -45,11 +45,13 @@ for col in dt.columns:
 dt.hist(bins=20, figsize=(12, 10))
 plt.suptitle('Histograms')
 plt.tight_layout()
+# plt.show()
 
 # Box plots
 dt.plot(kind='box', figsize=(12, 6))
 plt.title('Box plots')
 plt.tight_layout()
+# plt.show()
 
 # Scatter plots (for selected features)
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -65,6 +67,7 @@ axes[1].set_title('Age vs Max Heart Rate')
 
 plt.suptitle('Scatter plots')
 plt.tight_layout()
+# plt.show()
 
 # Display plots
 # plt.show()
@@ -103,33 +106,66 @@ selected_features = ['age', 'sex', 'cp_0', 'cp_1', 'cp_2', 'cp_3', 'trestbps',
 dt = dt[selected_features]
 
 # Normalise or standardise numerical features
-dt_scaled = dataset.copy()
-num_cols = ['age', 'trestbps', 'thalach', 'oldpeak', 'target']
+dt_scaled = dt.copy()  # Use dt (the preprocessed data), not dataset
+numerical_cols = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
 scaler = StandardScaler()
-dt_scaled[num_cols] = scaler.fit_transform(dt_scaled[num_cols])
+dt_scaled[numerical_cols] = scaler.fit_transform(dt_scaled[numerical_cols])
 print(dt_scaled.head())
-
 
 ###############################################################################
 # Part 2: Model Training
 ###############################################################################
 
 # Split dataset into training set (80%) and a test set (20%)
-x = dt_scaled
-y = dt_scaled['target']
-# For debugging
-print(x.shape)
-print(y.shape)
-
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+X_train, X_test = train_test_split(dt_scaled, test_size=0.2, random_state=42)
+print(f"Training set shape: {X_train.shape}")
+print(f"Test set shape: {X_test.shape}")
 
 # Apply Elbow method and choose an appropriate number of clusters k
 
+#   Initialise kmeans parameters
+kmeans_kwargs = {
+    "init": "random",
+    "n_init": 10,
+    "random_state": 1,
+}
+
+#   Array to hold SSE for each k
+sse = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
+    kmeans.fit(X_train)
+    sse.append(kmeans.inertia_)
+
+#   Visualise results
+plt.plot(range(1, 11), sse)
+plt.xticks(range(1, 11))
+plt.xlabel("Number of Clusters")
+plt.ylabel("SSE")
+# plt.show()
+
+
 # Import K-Means algorithm from sklearn and train it using the training dataset
+kmeans = KMeans(init="random", n_clusters=3, n_init=10, random_state=1)
+kmeans.fit(X_train)
+
 
 # Obtain cluster labels for both training and test data
+train_labels = kmeans.labels_
+test_labels = kmeans.predict(X_test)
+
+print("\nTraining set - Cluster distribution:")
+unique, counts = np.unique(train_labels, return_counts=True)
+for cluster, count in zip(unique, counts):
+    print(f"  Cluster {cluster}: {count} samples")
+
+print("\nTest set - Cluster distribution:")
+unique, counts = np.unique(test_labels, return_counts=True)
+for cluster, count in zip(unique, counts):
+    print(f"  Cluster {cluster}: {count} samples")
 
 # Display the cluster centers
+print(f"Cluster centers:\n{kmeans.cluster_centers_}")
 
 ###############################################################################
 # Part 3: Evaluation
