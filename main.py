@@ -40,17 +40,29 @@ for col in dataset.columns:
 # Feature distributions analysis and visualisation
 
 # Histograms
-dataset.hist()
+dataset.hist(bins=20, figsize=(12, 10))
 plt.suptitle('Histograms')
+plt.tight_layout()
 
 # Box plots
-dataset.plot(kind='box')
-dataset.boxplot()
-plt.suptitle('Box plots')
+dataset.plot(kind='box', figsize=(12, 6))
+plt.title('Box plots')
+plt.tight_layout()
 
 # Scatter plots (for selected features)
-dataset.plot(kind='scatter', x='age', y='chol')  # not sure which features should be selected
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+axes[0].scatter(dataset['age'], dataset['chol'])
+axes[0].set_xlabel('Age')
+axes[0].set_ylabel('Cholesterol')
+axes[0].set_title('Age vs Cholesterol')
+
+axes[1].scatter(dataset['age'], dataset['thalach'])
+axes[1].set_xlabel('Age')
+axes[1].set_ylabel('Max Heart Rate')
+axes[1].set_title('Age vs Max Heart Rate')
+
 plt.suptitle('Scatter plots')
+plt.tight_layout()
 
 # Display plots
 # plt.show()
@@ -72,7 +84,7 @@ dataset.drop_duplicates(subset=None, inplace=True)
 
 # Encode categorical variables (One hot encoding)
 
-categorical_cols = ['fbs', 'exang']
+categorical_cols = ['cp', 'restecg', 'slope', 'ca', 'thal']
 # Pandas method
 dataset = pd.get_dummies(dataset, columns=categorical_cols, dtype=int)
 print(dataset.head())
@@ -83,13 +95,17 @@ print(dataset.head())
 # fs = FeatureSelection(dataset, shifts=[25, 50, 75, 100], n_jobs=-1)
 # metrics = fs.get_metrics()
 # print(metrics)
-# fs.plot_results(n_features=10) # I am confused by the number of clusters that I should use
-dt = dataset[['age', 'sex', 'cp', 'chol', 'fbs_0', 'fbs_1', 'restecg', 'oldpeak', 'slope', 'ca']]
+# fs.plot_results(n_features=10)
+selected_features = ['age', 'sex', 'cp_0', 'cp_1', 'cp_2', 'cp_3', 'trestbps',
+                     'chol', 'thalach', 'exang', 'oldpeak']
+dt = dataset[selected_features]
 
 # Normalise or standardise numerical features
+dt_scaled = dt.copy()
+num_cols = ['age', 'trestbps', 'thalach', 'oldpeak']
 scaler = StandardScaler()
-dt_scaled = scaler.fit_transform(dt)
-print(dt_scaled)
+dt_scaled[num_cols] = scaler.fit_transform(dt_scaled[num_cols])
+print(dt_scaled.head())
 
 
 ###############################################################################
