@@ -171,12 +171,55 @@ print(f"Cluster centers:\n{kmeans.cluster_centers_}")
 # Part 3: Evaluation
 ###############################################################################
 
-# Evaluate the clustering using appropriate metrics: inertia, silhouette score,
-# Davies-Boulding Index
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 
-# Compare metric values for different choices of k
+# question 1
+print("\n--- check the metrics of our model with k=3 ---")
 
-# Interpret what these metrics say about cluster quality
+a = kmeans.inertia_
+b = silhouette_score(X_train, train_labels)
+c = davies_bouldin_score(X_train, train_labels)
 
-# Visualise the clustering results using matplotlib plots, color data points
-# according to their assigned cluster, and visualise the cluster centroids
+print("inertia result : ", a)
+print("silhouette score : ", b)
+print("davies-bouldin index : ", c)
+
+# the analysis of the metrics
+print("\n the results for the chosen k (k=3) :")
+print("\n- the inertia shows that patients are grouped around 3 centers but the groups are a little wide")
+print("- the silhouette score is near 0.17 showing clusters overlap")
+print("- the davies-bouldin index is above 1, it means the groups are not that separated")
+
+# question 2
+print("\n--- test for other k values ---")
+
+for k_test in [2, 4, 5]:
+    m_test = KMeans(n_clusters=k_test)
+    l_test = m_test.fit_predict(X_train)
+    sil_test = silhouette_score(X_train, l_test)
+    db_test = davies_bouldin_score(X_train, l_test)
+    print("k =", k_test, ": silhouette =", sil_test, "/ db =", db_test)
+
+# question 3
+print("\n--- final conclusion on the best k ---")
+print("from our comparison, k=2 seems to be the best choice according to metrics")
+print("it gives the highest silhouette score and the lowest davies-bouldin index")
+print("this means k=2 creates the most stable groups, even if k=3 gives more medical details")
+
+# question 4
+print("\n--- visualizing the results ---")
+plt.figure()
+
+# plotting Age vs Cholesterol
+# iloc is to select the columns from our scaled data
+plt.scatter(X_train.iloc[:, 0], X_train.iloc[:, 7], c=train_labels, cmap='Set1')
+
+# adding the centroids 
+cen = kmeans.cluster_centers_
+plt.scatter(cen[:, 0], cen[:, 7], s=180, c='black', marker='X', label='centroids')
+
+plt.title("visual analysis of our patient groups")
+plt.xlabel("age")
+plt.ylabel("cholesterol")
+plt.legend()
+plt.show()
