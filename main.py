@@ -186,8 +186,8 @@ unique, counts = np.unique(test_labels, return_counts=True)
 for cluster, count in zip(unique, counts):
     print(f"  Cluster {cluster}: {count} samples")
 
-# Q5: Display the cluster centers
-print('\n--- Cluster centers ---')
+# Q5: Display the cluster centres
+print('\n--- Cluster centres ---')
 print(kmeans.cluster_centers_)
 
 ###############################################################################
@@ -208,7 +208,7 @@ print("davies-bouldin index : ", c)
 
 # Analysis of the metrics
 print("\n the results for the chosen k (k=3) :")
-print("\n- the inertia shows that patients are grouped around 3 centers but the groups are a little wide")
+print("\n- the inertia shows that patients are grouped around 3 centres but the groups are a little wide")
 print("- the silhouette score is near 0.17 showing clusters overlap")
 print("- the davies-bouldin index is above 1, it means the groups are not that separated")
 
@@ -228,8 +228,8 @@ print("From our comparison, k=2 seems to be the best choice according to metrics
 print("it gives the highest silhouette score and the lowest davies-bouldin index")
 print("this means k=2 creates the most stable groups, even if k=3 gives more medical details")
 
-# Q4: Visualisation and coloring according data points according to their assigned center
-print("\n--- Visualizing the results ---")
+# Q4: Visualisation and coloring according data points according to their assigned centre
+print("\n--- Visualising the results ---")
 plt.figure()
 
 # Plotting Age vs Cholesterol
