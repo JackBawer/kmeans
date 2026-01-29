@@ -194,7 +194,6 @@ print(kmeans.cluster_centers_)
 # Part 3: Evaluation
 ###############################################################################
 
-
 # Q1: Clustering evaluation
 print("\n--- Check the metrics of our model with k=3 ---")
 
@@ -202,48 +201,80 @@ a = kmeans.inertia_
 b = silhouette_score(X_train, train_labels)
 c = davies_bouldin_score(X_train, train_labels)
 
-print("inertia result : ", a)
-print("silhouette score : ", b)
-print("davies-bouldin index : ", c)
+print("Inertia: ", a)
+print("Silhouette score: ", b)
+print("Davies-Bouldin index: ", c)
 
 # Analysis of the metrics
-print("\n the results for the chosen k (k=3) :")
-print("\n- the inertia shows that patients are grouped around 3 centres but the groups are a little wide")
-print("- the silhouette score is near 0.17 showing clusters overlap")
-print("- the davies-bouldin index is above 1, it means the groups are not that separated")
+print("\nThe results for the chosen k (k=3):")
+print("- The inertia shows that patients are grouped around 3 centres but the groups are a little wide")
+print("- The silhouette score is near 0.17 showing clusters overlap")
+print("- The davies-bouldin index is above 1, it means the groups are not that separated")
 
-# Q2: Comparison of metric values for different choies of k
+# Q2: Comparison of metric values for different choices of k
 print("\n--- Test for other k values ---")
 
 for k_test in [2, 4, 5]:
-    m_test = KMeans(n_clusters=k_test)
+    m_test = KMeans(n_clusters=k_test, init="random", n_init=10, random_state=1)
     l_test = m_test.fit_predict(X_train)
     sil_test = silhouette_score(X_train, l_test)
     db_test = davies_bouldin_score(X_train, l_test)
-    print("k =", k_test, ": silhouette =", sil_test, "/ db =", db_test)
+    print(f"k = {k_test}: silhouette = {sil_test:.4f} / db = {db_test:.4f}")
 
-# Q3: Interpretation of of these metrics about cluster quality
+# Q3: Interpretation of these metrics about cluster quality
 print("\n--- Final conclusion on the best k ---")
 print("From our comparison, k=2 seems to be the best choice according to metrics")
 print("it gives the highest silhouette score and the lowest davies-bouldin index")
 print("this means k=2 creates the most stable groups, even if k=3 gives more medical details")
 
-# Q4: Visualisation and coloring according data points according to their assigned centre
+# Q4: Visualize the clustering results using matplotlib plots
 print("\n--- Visualising the results ---")
-plt.figure()
 
-# Plotting Age vs Cholesterol
-# iloc is to select the columns from our scaled data
-plt.scatter(X_train.iloc[:, 0], X_train.iloc[:, 7], c=train_labels, cmap='Set1')
+# Create a figure with multiple subplots
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
-# Adding the centroids
+# Plot 1: Age vs Cholesterol
+axes[0, 0].scatter(X_train.iloc[:, 0], X_train.iloc[:, 7],
+                   c=train_labels, cmap='Set1', alpha=0.6, edgecolors='k', linewidth=0.5)
 cen = kmeans.cluster_centers_
-plt.scatter(cen[:, 0], cen[:, 7], s=180, c='black', marker='X', label='centroids')
+axes[0, 0].scatter(cen[:, 0], cen[:, 7],
+                   s=200, c='black', marker='X', label='Centroids', edgecolors='white', linewidth=2)
+axes[0, 0].set_title("Age vs Cholesterol")
+axes[0, 0].set_xlabel("Age (scaled)")
+axes[0, 0].set_ylabel("Cholesterol (scaled)")
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
 
-plt.title("visual analysis of our patient groups")
-plt.xlabel("age")
-plt.ylabel("cholesterol")
-plt.legend()
-# plt.show()
+# Plot 2: Age vs Max Heart Rate
+axes[0, 1].scatter(X_train.iloc[:, 0], X_train.iloc[:, 8],
+                   c=train_labels, cmap='Set1', alpha=0.6, edgecolors='k', linewidth=0.5)
+axes[0, 1].scatter(cen[:, 0], cen[:, 8],
+                   s=200, c='black', marker='X', label='Centroids', edgecolors='white', linewidth=2)
+axes[0, 1].set_title("Age vs Max Heart Rate")
+axes[0, 1].set_xlabel("Age (scaled)")
+axes[0, 1].set_ylabel("Max Heart Rate (scaled)")
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
 
-plt.show()  # Display all plots
+# Plot 3: Blood Pressure vs Cholesterol
+axes[1, 0].scatter(X_train.iloc[:, 6], X_train.iloc[:, 7],
+                   c=train_labels, cmap='Set1', alpha=0.6, edgecolors='k', linewidth=0.5)
+axes[1, 0].scatter(cen[:, 6], cen[:, 7],
+                   s=200, c='black', marker='X', label='Centroids', edgecolors='white', linewidth=2)
+axes[1, 0].set_title("Blood Pressure vs Cholesterol")
+axes[1, 0].set_xlabel("Blood Pressure (scaled)")
+axes[1, 0].set_ylabel("Cholesterol (scaled)")
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Cluster Size Distribution
+cluster_counts = np.bincount(train_labels)
+axes[1, 1].bar(range(len(cluster_counts)), cluster_counts, color=['#E41A1C', '#377EB8', '#4DAF4A'])
+axes[1, 1].set_title("Cluster Size Distribution")
+axes[1, 1].set_xlabel("Cluster")
+axes[1, 1].set_ylabel("Number of Patients")
+axes[1, 1].set_xticks(range(len(cluster_counts)))
+axes[1, 1].grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+plt.show()
