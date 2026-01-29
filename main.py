@@ -2,19 +2,34 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import silhouette_score, davies_bouldin_score
 import matplotlib.pyplot as plt
 import numpy as np
 from featclus.model import FeatureSelection
+from pathlib import Path
+
+import warnings
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 ###############################################################################
 # Part 1: Data Exploration
 ###############################################################################
 
-# Load dataset using Pandas
-dataset = pd.read_csv('./heart.csv')
+
+# Q1: Load dataset using Pandas
+
+# Then load the dataset
+DATA_DIR = Path(__file__).parent
+HEART_CSV = DATA_DIR / 'heart.csv'
+
+dataset = pd.read_csv(HEART_CSV)
+
+print('\n--- Dataset loaded ---')
+
 dt = dataset.copy()
 
-# Display:
+# Q2: Display:
+print('\n--- Display ---')
 #   First rows of dataset
 print(dt.head())
 #   Dataset shape (number of rows and columns)
@@ -23,24 +38,27 @@ print(f'Rows: {rows}, Columns: {cols}')
 #   Column names and data types
 print(dt.dtypes)
 
-# Remove target column
+# Q3: Remove target column
 dt.drop('target', axis=1, inplace=True)
+print('\n--- Target column removed ---')
 print(dt.columns.tolist())
 
-# Compute basic statistics (mean, standard deviation, min, max)
-stats = {'mean': None, 'std_dev': None, 'min': None, 'max': None}
-
+# Q4: Compute basic statistics (mean, standard deviation, min, max)
 np.set_printoptions(legacy='1.25')  # to avoid printing np.float64
 
+print('\n--- Basic statics computed ---')
+stats = {}
 for col in dt.columns:
-    stats['mean'] = round(dt[col].mean(), 2)
-    stats['std_dev'] = round(dt[col].std(), 2)
-    stats['min'] = round(dt[col].min(), 2)
-    stats['max'] = round(dt[col].max(), 2)
-    print(f'{col} = {stats}')
+    stats[col] = {
+            'mean': round(dt[col].mean(), 2),
+            'std_dev': round(dt[col].std(), 2),
+            'min': round(dt[col].min(), 2),
+            'max': round(dt[col].max(), 2)
+    }
 
-# Feature distributions analysis and visualisation
+# Q5: Feature distributions analysis and visualisation
 
+print('\n--- Feature distribution visualisation ---')
 # Histograms
 dt.hist(bins=20, figsize=(12, 10))
 plt.suptitle('Histograms')
@@ -69,60 +87,59 @@ plt.suptitle('Scatter plots')
 plt.tight_layout()
 # plt.show()
 
-# Display plots
-# plt.show()
-
-# Identify missing values
+# Q6: Identify missing values
+print('\n--- Missing values identification and removal ---')
 missing_vals_cnt = dt.isnull().sum()
 print(f'Missing values: \n{missing_vals_cnt}')
 
 # Drop rows with missing values
 dt.dropna(inplace=True)
-# Drop rows where all values are missing
-dt.dropna(inplace=True, how='all')
 
-# Remove irrelevant columns (patient ids)
-# There aren't any irrelevant columns so I'm not sure what I'm supposed to do
+# Q7: Remove irrelevant columns (e.g. patient ids)
+# There aren't any irrelevant columns
+print('\n--- Irrelavant columns removed (none) ---')
 
-# Check for duplicates and remove them
+# Q8: Check for duplicates and remove them
 dt.drop_duplicates(subset=None, inplace=True)
+print('\n--- Duplicates removal ---')
 
-# Encode categorical variables (One hot encoding)
+# Q9: Encode categorical variables (One hot encoding)
 
 categorical_cols = ['cp', 'restecg', 'slope', 'ca', 'thal']
 # Pandas method
 dt = pd.get_dummies(dt, columns=categorical_cols, dtype=int)
+print('\n--- One hot encoding perfomed on categorial columns ---')
 print(dt.head())
 
-# Todo: Sklearn method
-
-# Select features to be used for clustering
-# fs = FeatureSelection(dt, shifts=[25, 50, 75, 100], n_jobs=-1)
-# metrics = fs.get_metrics()
-# print(metrics)
-# fs.plot_results(n_features=10)
+# Q10: Select features to be used for clustering
+fs = FeatureSelection(dt, shifts=[25, 50, 75, 100], n_jobs=-1)
+metrics = fs.get_metrics()
+print(metrics)
+fs.plot_results(n_features=10)
 selected_features = ['age', 'sex', 'cp_0', 'cp_1', 'cp_2', 'cp_3', 'trestbps',
                      'chol', 'thalach', 'exang', 'oldpeak']
 dt = dt[selected_features]
+print('\n--- Feature selection ---')
 
-# Normalise or standardise numerical features
-dt_scaled = dt.copy()  # Use dt (the preprocessed data), not dataset
+# Q11: Normalise or standardise numerical features
+dt_scaled = dt.copy()
 numerical_cols = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
 scaler = StandardScaler()
 dt_scaled[numerical_cols] = scaler.fit_transform(dt_scaled[numerical_cols])
+print('\n--- Numerical features scaled ---')
 print(dt_scaled.head())
 
 ###############################################################################
 # Part 2: Model Training
 ###############################################################################
 
-# Split dataset into training set (80%) and a test set (20%)
+# Q1: Split dataset into training set (80%) and a test set (20%)
 X_train, X_test = train_test_split(dt_scaled, test_size=0.2, random_state=42)
+print('\n--- Dataset split ---')
 print(f"Training set shape: {X_train.shape}")
 print(f"Test set shape: {X_test.shape}")
 
-# Apply Elbow method and choose an appropriate number of clusters k
-
+# Q2: Apply Elbow method and choose an appropriate number of clusters k
 #   Initialise kmeans parameters
 kmeans_kwargs = {
     "init": "random",
@@ -143,16 +160,21 @@ plt.xticks(range(1, 11))
 plt.xlabel("Number of Clusters")
 plt.ylabel("SSE")
 # plt.show()
+print('\n--- Elblow method applied ---')
 
 
-# Import K-Means algorithm from sklearn and train it using the training dataset
+# Q3: Import K-Means algorithm from sklearn and train it using the training dataset
 kmeans = KMeans(init="random", n_clusters=3, n_init=10, random_state=1)
 kmeans.fit(X_train)
+print('\n--- Dataset trained ---')
 
 
-# Obtain cluster labels for both training and test data
+# Q4: Obtain cluster labels for both training and test data
+print('\n--- Cluster labes ---')
 train_labels = kmeans.labels_
 test_labels = kmeans.predict(X_test)
+print(train_labels)
+print(test_labels)
 
 print("\nTraining set - Cluster distribution:")
 unique, counts = np.unique(train_labels, return_counts=True)
@@ -164,17 +186,17 @@ unique, counts = np.unique(test_labels, return_counts=True)
 for cluster, count in zip(unique, counts):
     print(f"  Cluster {cluster}: {count} samples")
 
-# Display the cluster centers
-print(f"Cluster centers:\n{kmeans.cluster_centers_}")
+# Q5: Display the cluster centers
+print('\n--- Cluster centers ---')
+print(kmeans.cluster_centers_)
 
 ###############################################################################
 # Part 3: Evaluation
 ###############################################################################
 
-from sklearn.metrics import silhouette_score, davies_bouldin_score
 
-# question 1
-print("\n--- check the metrics of our model with k=3 ---")
+# Q1: Clustering evaluation
+print("\n--- Check the metrics of our model with k=3 ---")
 
 a = kmeans.inertia_
 b = silhouette_score(X_train, train_labels)
@@ -184,14 +206,14 @@ print("inertia result : ", a)
 print("silhouette score : ", b)
 print("davies-bouldin index : ", c)
 
-# the analysis of the metrics
+# Analysis of the metrics
 print("\n the results for the chosen k (k=3) :")
 print("\n- the inertia shows that patients are grouped around 3 centers but the groups are a little wide")
 print("- the silhouette score is near 0.17 showing clusters overlap")
 print("- the davies-bouldin index is above 1, it means the groups are not that separated")
 
-# question 2
-print("\n--- test for other k values ---")
+# Q2: Comparison of metric values for different choies of k
+print("\n--- Test for other k values ---")
 
 for k_test in [2, 4, 5]:
     m_test = KMeans(n_clusters=k_test)
@@ -200,21 +222,21 @@ for k_test in [2, 4, 5]:
     db_test = davies_bouldin_score(X_train, l_test)
     print("k =", k_test, ": silhouette =", sil_test, "/ db =", db_test)
 
-# question 3
-print("\n--- final conclusion on the best k ---")
-print("from our comparison, k=2 seems to be the best choice according to metrics")
+# Q3: Interpretation of of these metrics about cluster quality
+print("\n--- Final conclusion on the best k ---")
+print("From our comparison, k=2 seems to be the best choice according to metrics")
 print("it gives the highest silhouette score and the lowest davies-bouldin index")
 print("this means k=2 creates the most stable groups, even if k=3 gives more medical details")
 
-# question 4
-print("\n--- visualizing the results ---")
+# Q4: Visualisation and coloring according data points according to their assigned center
+print("\n--- Visualizing the results ---")
 plt.figure()
 
-# plotting Age vs Cholesterol
+# Plotting Age vs Cholesterol
 # iloc is to select the columns from our scaled data
 plt.scatter(X_train.iloc[:, 0], X_train.iloc[:, 7], c=train_labels, cmap='Set1')
 
-# adding the centroids 
+# Adding the centroids
 cen = kmeans.cluster_centers_
 plt.scatter(cen[:, 0], cen[:, 7], s=180, c='black', marker='X', label='centroids')
 
@@ -222,4 +244,6 @@ plt.title("visual analysis of our patient groups")
 plt.xlabel("age")
 plt.ylabel("cholesterol")
 plt.legend()
-plt.show()
+# plt.show()
+
+plt.show()  # Display all plots
